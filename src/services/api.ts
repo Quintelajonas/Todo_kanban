@@ -28,7 +28,7 @@ export const taskService =  {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/tasks/${id}`, {
             method: "PATCH",
             headers: {
-                "Content-Type": "Aplication/json"
+                "Content-Type": "Application/json"
             },
             body: JSON.stringify(attributes)
             })

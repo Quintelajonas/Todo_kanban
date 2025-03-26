@@ -17,7 +17,7 @@ export interface TasksContextData {
 
     tasks: Task[],
     createTask: (attributes: Omit<Task, "id">) => Promise<void>
-    uptdateTask: (id: string, attributes: Partial<Omit<Task, "id">> ) => Promise<void>
+    updateTask: (id: string, attributes: Partial<Omit<Task, "id">> ) => Promise<void>
     deleteTask: (id: string) => Promise<void>
 }
 
@@ -38,7 +38,7 @@ const createTask =  async (attributes: Omit<Task, "id">) => {
     const newTask = await taskService.createTask(attributes)
 
 setTasks((current) => {
-    const updatedTasks = [...current, newTask]
+    const updatedTasks = [...current || [], newTask]
     return updatedTasks
 })
 
@@ -46,23 +46,30 @@ setTasks((current) => {
 }
 
 const updateTask = async (id: string, attributes: Partial<Omit<Task, "id">>) => {
-    const parsedAttributes = UpdateTaskSchema.parse(attributes)
-    await taskService.updateTask(id, parsedAttributes)
-    setTasks((current) => {
-      const updatedTasks = [...current]
-      const index = updatedTasks.findIndex((task) => task.id === id)
-      Object.assign(updatedTasks[index], parsedAttributes)
-      return updatedTasks
-    })
+    try {
+      const parsedAttributes = UpdateTaskSchema.parse(attributes)
+      await taskService.updateTask(id, parsedAttributes)
+  
+      setTasks((current = []) => {
+        const updatedTasks = [...current]
+        const index = updatedTasks.findIndex((task) => task.id === id)
+        if (index !== -1) {
+          Object.assign(updatedTasks[index], parsedAttributes)
+        }
+        return updatedTasks
+      })
+    } catch (error) {
+      console.error("Erro ao atualizar tarefa:", error)
+    }
   }
 
   const deleteTask = async (id: string) => {
     await taskService.deleteTask(id)
-    setTasks((current) => current.filter((task) => task.id !== id))
+    setTasks((current) =>  (current ?? []).filter((task) => task.id !== id))
   }
 
     return(
-        <TasksContext.Provider value={{ tasks, createTask, updateTask, deleteTask }}>
+        <TasksContext.Provider value={{ tasks: tasks || [], createTask, updateTask, deleteTask }}>
             {children}
         </TasksContext.Provider>
     )
